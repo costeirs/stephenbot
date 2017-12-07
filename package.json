@@ -1,0 +1,20 @@
+{
+    "name": "stephenbot",
+    "version": "1.0.0",
+    "description": "Automated Nonsense",
+    "main": "index.js",
+    "repository": "https://github.com/costeirs/stephenbot",
+    "author": "Stephen Costeira",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "discord.js": "^11.2.1",
+        "dotenv": "^4.0.0"
+    },
+    "engines": {
+        "node": ">=8.0.0"
+    }
+}
