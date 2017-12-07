@@ -2,7 +2,14 @@ import { forEach } from '../../Library/Caches/typescript/2.6/node_modules/@types
 
 const Discord = require('discord.js');
 const cron = require('cron').CronJob
+const mongoose = require('mongoose')
 const reminders = require('./functions/reminders')
+
+// Connect to the database
+mongoose.connect(process.env.MONGO_URL, { useMongoClient: true })
+
+// Fail on connection error.
+mongoose.connection.on('error', error => { throw error })
 
 const client = new Discord.Client();
 
