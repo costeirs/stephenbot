@@ -61,7 +61,7 @@ client.login(process.env.DISCORD_TOKEN);
 var checkReminders = new cron.CronJob('00 * * * * *', () => {
   const date = new Date()
 
-  const data = await reminders.checkTime(date)
+  const data = reminders.checkTime(date)
   console.log(data)
 
   if (data) {
