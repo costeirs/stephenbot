@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const cron = require('cron').CronJob
+const cron = require('cron')
 const mongoose = require('mongoose')
 const reminders = require('./functions/reminders')
 

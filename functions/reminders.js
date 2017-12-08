@@ -1,5 +1,4 @@
 const Reminder = require('../models/reminder')
-const cron = require('cron').CronJob
 
 // For creating a new reminder
 exports.create = async (title, date, channel) => {
