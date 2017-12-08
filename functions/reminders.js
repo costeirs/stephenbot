@@ -11,7 +11,7 @@ exports.create = async (title, date, channel) => {
 }
 
 exports.checkTime = async (dateToCheck) => {
-  const reminders = await Reminder.find({'date': dateToCheck})
+  const reminders = await Reminder.find({'date': dateToCheck}).exec()
 
   if (reminders) {
     return reminders
