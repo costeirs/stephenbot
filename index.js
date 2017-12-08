@@ -48,8 +48,8 @@ client.on('message', message => {
       console.log(date)
       console.log(channel)
       if (reminders.create(title, date, channel)) { //If the create is a success
-        console.log("Created Reminder" + title + ', ' + date + ', ' + channel) //log it
-        client.channels.get(channel).send("Reminder made for " + title + " on this channel for " + date) //just send it
+        console.log("Created Reminder " + title + ', ' + date + ', ' + channel) //log it
+        client.channels.get(channel).send("Reminder made for **" + title + "** on this channel for **" + date + '**') //just send it
       }
     }
   }
@@ -66,7 +66,9 @@ new cron('00 * * * * *', () => {
   if (data) {
     //Loop over the reminders that need to be sent
     data.forEach(reminder => {
+      console.log("Sending reminder for: " + reminder.title + " to: " + reminder.channel)
       //Send the message to the proper channel
+      client.channels.get(reminder.channel).send("**REMINDER** \n" + reminder.message + "\n @everyone")
     })
   } else {
     //handle it
