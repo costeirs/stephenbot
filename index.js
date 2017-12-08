@@ -37,14 +37,20 @@ client.on('message', message => {
     //Assuming reminder is '$reminder 12/8/17 11:00 We have a meeting'
     if (message.content.split(" ")[0] === '$reminder') {
       //Get the title, date and channel from the message
-      var msg = message.content.split(" ")
       var channel = message.channel.id
-      var date = msg[1] + msg[2]
-      var title = ''
+      var msg = message.content.split(" ") //blow that boi up
+      var date = msg[1] + msg[2] //the date are the first 2 args
+      var title = '' //we gonna build this boi
       for (i = 3; i < msg.length; i++) {
-        title += msg[i]
+        title += msg[i] //build it
       }
-      reminders.create(title, date, channel)
+      console.log(title)
+      console.log(date)
+      console.log(channel)
+      if (reminders.create(title, date, channel)) { //If the create is a success
+        console.log("Created Reminder" + title + ', ' + date + ', ' + channel) //log it
+        client.channels.get(channel).send("Reminder made for " + title + " on this channel for " + date) //just send it
+      }
     }
   }
 });

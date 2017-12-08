@@ -8,7 +8,7 @@ exports.create = async (title, date, channel) => {
 
   await reminder.save()
 
-  return(true, reminder)
+  return true
 }
 
 exports.checkTime = async (dateToCheck) => {
