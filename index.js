@@ -1,5 +1,3 @@
-import { forEach } from '../../Library/Caches/typescript/2.6/node_modules/@types/async';
-
 const Discord = require('discord.js');
 const cron = require('cron').CronJob
 const mongoose = require('mongoose')
