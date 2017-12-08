@@ -10,12 +10,12 @@ exports.create = async (title, date, channel) => {
   return true
 }
 
-exports.checkTime = (dateToCheck) => {
+exports.checkTime = async (dateToCheck) => {
   Reminder.find({'date': dateToCheck}).then(reminder => {
     if (reminders) {
       return reminders
     } else {
       return null
     }
-  })
+  }).exec()
 }
