@@ -61,17 +61,15 @@ client.login(process.env.DISCORD_TOKEN);
 var checkReminders = new cron.CronJob('00 * * * * *', () => {
   const date = new Date()
 
-  const data = reminders.checkTime(date)
-  console.log(data)
+  var query = reminders.checkTime(date)
 
-  if (data) {
-    //Loop over the reminders that need to be sent
-    // data.forEach(reminder => {
-    //   console.log("Sending reminder for: " + reminder.title + " to: " + reminder.channel)
-    //   //Send the message to the proper channel
-    //   client.channels.get(reminder.channel).send("**REMINDER** \n" + reminder.message + "\n @everyone")
-    // })
-  } else {
-    //handle it
-  }
+  query.exec(err, reminders => {
+    if(err) {
+      return console.log(err)
+    } else {
+      reminders.array.forEach(reminder => {
+        client.channels.get(reminder.channel).send('**REMINDER**\n' + title + '\n@everyone')
+      });
+    }
+  })
 }, null, true, 'America/Chicago')
