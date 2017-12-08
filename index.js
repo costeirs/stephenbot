@@ -66,11 +66,11 @@ var checkReminders = new cron.CronJob('00 * * * * *', () => {
 
   if (data) {
     //Loop over the reminders that need to be sent
-    data.forEach(reminder => {
-      console.log("Sending reminder for: " + reminder.title + " to: " + reminder.channel)
-      //Send the message to the proper channel
-      client.channels.get(reminder.channel).send("**REMINDER** \n" + reminder.message + "\n @everyone")
-    })
+    // data.forEach(reminder => {
+    //   console.log("Sending reminder for: " + reminder.title + " to: " + reminder.channel)
+    //   //Send the message to the proper channel
+    //   client.channels.get(reminder.channel).send("**REMINDER** \n" + reminder.message + "\n @everyone")
+    // })
   } else {
     //handle it
   }
