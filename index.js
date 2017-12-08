@@ -27,7 +27,7 @@ client.on('ready', () => {
 //Messaging functionality
 client.on('message', message => {
   //First check to see if the message is meant to be a command
-  if (message.content.split("")[0] === '$') { 
+  if (message.content.split("")[0] === '$') {
 
     if (message.content === 'ping') {
         message.reply('pong');
@@ -63,7 +63,7 @@ var checkReminders = new cron.CronJob('00 * * * * *', () => {
 
   var query = reminders.checkTime(date)
 
-  query.exec(err, reminders => {
+  query.exec((err, reminders) => {
     if(err) {
       return console.log(err)
     } else {
