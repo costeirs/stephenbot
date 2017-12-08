@@ -49,7 +49,7 @@ client.on('message', message => {
       console.log(channel)
       if (reminders.create(title, date, channel)) { //If the create is a success
         console.log("Created Reminder " + title + ', ' + date + ', ' + channel) //log it
-        client.channels.get(channel).send("Reminder made for **" + title + "** on this channel for **" + date + '**') //just send it
+        client.channels.get(channel).send("Reminder made for **" + title + "** on this channel for *" + date + '*') //just send it
       }
     }
   }
@@ -58,7 +58,7 @@ client.on('message', message => {
 client.login(process.env.DISCORD_TOKEN);
 
 //CRON SHIT
-new cron('00 * * * * *', () => {
+var checkReminders = new cron.CronJob('00 * * * * *', () => {
   const date = new Date()
 
   const data = reminders.checkTime(date)
@@ -73,4 +73,4 @@ new cron('00 * * * * *', () => {
   } else {
     //handle it
   }
-})
+}, null, true, 'America/Chicago')
