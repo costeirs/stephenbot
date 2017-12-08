@@ -62,6 +62,7 @@ var checkReminders = new cron.CronJob('00 * * * * *', () => {
   const date = new Date()
 
   const data = reminders.checkTime(date)
+  console.log(data)
 
   if (data) {
     //Loop over the reminders that need to be sent
