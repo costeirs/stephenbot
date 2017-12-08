@@ -39,10 +39,10 @@ client.on('message', message => {
       //Get the title, date and channel from the message
       var channel = message.channel.id
       var msg = message.content.split(" ") //blow that boi up
-      var date = msg[1] + msg[2] //the date are the first 2 args
+      var date = msg[1] + " " + msg[2] //the date are the first 2 args
       var title = '' //we gonna build this boi
       for (i = 3; i < msg.length; i++) {
-        title += msg[i] //build it
+        title += msg[i] + " " //build it
       }
       console.log(title)
       console.log(date)
