@@ -26,13 +26,16 @@ module.exports = class Reminders {
         if (!channel) {
           // @FIXME bug? dm channels do not reopen. ignore for now
           console.error("can't find channel", reminder.channel)
-          Model.findByIdAndUpdate(reminder._id, { seen: true })
+
+          reminder.seen = true
+          reminder.save()
           return
         }
         channel.send('**REMINDER**\n' + reminder.title + '\n@everyone')
 
         // mark as seen
-        Model.findByIdAndUpdate(reminder._id, { seen: true })
+        reminder.seen = true
+        reminder.save()
       })
     })
   }
