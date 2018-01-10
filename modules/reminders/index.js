@@ -93,17 +93,21 @@ module.exports = class Reminders {
   /**
   * list upcoming reminders in channel
   */
-  _list (message) {
+  async _list (message) {
     var channel = message.channel.id
 
-    Model.find({'channel': channel, 'date': {$gt: new Date()}})
-    .exec(undefined, reminders => {
-      var list = 'Reminders currently set for this channel:\n'
-      reminders.array.forEach(reminder => {
-        list += reminder.date + ': ' + reminder.title + '\n'
-      })
-      message.reply(list)
+    const reminders = await Model.find({'channel': channel, 'date': {$gt: new Date()}, 'seen': false}).exec()
+
+    if (reminders.length === 0) {
+      message.reply('No upcoming reminders for this channel.')
+      return
+    }
+
+    var list = 'Reminders currently set for this channel:\n'
+    reminders.forEach(reminder => {
+      list += reminder.date + ': ' + reminder.title + '\n'
     })
+    message.reply(list)
   }
 
   /**

@@ -4,9 +4,11 @@ Automated Nonsense
 ## The Bot
 Extends [discord.js](https://discord.js.org/).
 
+## Testing
+Fill in .env file.
+
 ## Contributing
-1. fill in .env file
-2. Run `npm run lint` before committing
+Run `npm run lint` before committing.
 
 ## Modules
 `modules/{name}/index.js`: entry point for your module
