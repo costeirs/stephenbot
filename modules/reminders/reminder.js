@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 
-//Assuming reminder is '$remind channel 12/8/17 11:00 We have a meeting'
 const definition = {
   title: {
     type: String
@@ -10,6 +9,10 @@ const definition = {
   },
   channel: {
     type: String
+  },
+  seen: {
+    type: Boolean,
+    default: false
   }
 }
 

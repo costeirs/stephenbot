@@ -1,0 +1,77 @@
+const {Client} = require('discord.js')
+
+module.exports = class Bot extends Client {
+  constructor (opts) {
+    super(opts)
+    this.modules = []
+  }
+
+  onready () {
+    console.log("I'm ready!")
+  }
+
+  onmessage (message) {
+    // make sure we don't reply to our own messages
+    if (message.author.id === this.user.id) {
+      return
+    }
+
+    // when in a dm with the bot, it is not required to @ the bot
+    // when in a public channel, it is required to @ the bot
+    var indm = message.channel.type === 'dm'
+
+    var atbot = '<@' + this.user.id + '> '
+    var command = message.content
+
+    if (indm) {
+      if (command.startsWith(atbot)) {
+        command = command.substring(atbot.length)
+      }
+    } else {
+      if (command.startsWith(atbot)) {
+        command = command.substring(atbot.length)
+      } else {
+        return
+      }
+    }
+
+    // make sure it's not empty
+    if (!command) {
+      console.log('empty')
+      return
+    }
+
+    for (var m of this.modules) {
+      if (typeof m.WatchPhrase !== 'object' || typeof m.fire !== 'function') {
+        // module does not implement WatchPhrase or has no fire method
+        continue
+      }
+      if (m.WatchPhrase.test(command)) {
+        // put command into message object
+        message.command = command
+        // fire
+        try {
+          m.fire(message)
+        } catch (e) {
+          console.error('error firing module', m.constructor.name, ':', e)
+          message.reply('oops, something went wrong.')
+        }
+        // only one handler per phrase right now
+        return
+      }
+    }
+
+    // at this point, we've gone through every module but didn't fire anything
+    const commandone = command.split(' ')[0]
+    message.reply("I don't know what you mean by '" + commandone + "'")
+  }
+
+  ontick () {
+    for (var m of this.modules) {
+      if (typeof m.tick !== 'function') {
+        continue
+      }
+      m.tick(this)
+    }
+  }
+}

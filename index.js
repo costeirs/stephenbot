@@ -1,75 +1,55 @@
-const Discord = require('discord.js');
-const cron = require('cron')
+// Dependencies
+const dirs = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).isDirectory())
+const fs = require('fs')
 const mongoose = require('mongoose')
-const reminders = require('./functions/reminders')
+const path = require('path')
 
-// Connect to the database
-mongoose.connect(process.env.MONGO_URL, { useMongoClient: true })
+// Load configuration
+require('dotenv').config()
 
-// Fail on connection error.
-mongoose.connection.on('error', error => { throw error })
-
-const client = new Discord.Client();
-
-
-// In PROD, settings passed via env vars, not .env file
-const isProd = process.env.NODE_ENV === 'production';
-if (!isProd) {
-    require('dotenv').config();
-}
-
-
-//Ready message
-client.on('ready', () => {
-    console.log('I am ready!');
-});
-
-//Messaging functionality
-client.on('message', message => {
-  //First check to see if the message is meant to be a command
-  if (message.content.split("")[0] === '$') {
-
-    if (message.content === 'ping') {
-        message.reply('pong');
-    }
-
-    //If message is meant to SET a reminder
-    //Assuming reminder is '$reminder 12/8/17 11:00 We have a meeting'
-    if (message.content.split(" ")[0] === '$reminder') {
-      //Get the title, date and channel from the message
-      var channel = message.channel.id
-      var msg = message.content.split(" ") //blow that boi up
-      var date = msg[1] + " " + msg[2] //the date are the first 2 args
-      var title = '' //we gonna build this boi
-      for (i = 3; i < msg.length; i++) {
-        title += msg[i] + " " //build it
-      }
-      console.log(title)
-      console.log(date)
-      console.log(channel)
-      if (reminders.create(title, date, channel)) { //If the create is a success
-        console.log("Created Reminder " + title + ', ' + date + ', ' + channel) //log it
-        client.channels.get(channel).send("Reminder made for **" + title + "** on this channel for *" + date + '*') //just send it
-      }
-    }
+// This is now the main entry point
+async function run () {
+  // 0. Check for env vars
+  if (!process.env.MONGO_URL) {
+    throw new Error('Env var MONGO_URL is required.')
   }
-});
+  if (!process.env.DISCORD_TOKEN) {
+    throw new Error('Env var DISCORD_TOKEN is required.')
+  }
 
-client.login(process.env.DISCORD_TOKEN);
+  // 1. Connect to the database
+  mongoose.Promise = Promise
+  mongoose.connection.on('error', error => { throw error })
+  await mongoose.connect(process.env.MONGO_URL, { useMongoClient: true })
 
-//CRON SHIT
-var checkReminders = new cron.CronJob('00 * * * * *', () => {
-  const date = new Date()
+  // 2. Login to Discord
+  const Bot = new (require('./bot'))()
+  Bot.on('ready', Bot.onready)
+  Bot.on('message', Bot.onmessage)
+  await Bot.login(process.env.DISCORD_TOKEN)
 
-  var query = reminders.checkTime(date)
+  // 3. Load modules
+  const modules = dirs('modules')
+  for (var module of modules) {
+    console.log('Loading module', module)
+    Bot.modules.push(new (require('./modules/' + module))())
+  }
+  console.log('modules=', Bot.modules)
 
-  query.exec((err, reminders) => {
-    if(err) {
-      return console.log(err)
-    } else {
-      reminders.array.forEach(reminder => {
-        client.channels.get(reminder.channel).send('**REMINDER**\n' + title + '\n@everyone')
-      });
-    }
+  // 4. Start cron
+  setInterval(function () { Bot.ontick() }, 10 * 1000)
+
+  // All done
+  console.log('Booted.')
+
+  // Handle stopping properly
+  process.on('SIGINT', function () {
+    console.log('graceful shutdown')
+    Bot.disconnect()
+    process.exit()
   })
-}, null, true, 'America/Chicago')
+}
+run().catch(e => {
+  console.error(e)
+  process.exit(1)
+})
