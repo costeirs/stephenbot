@@ -6,6 +6,7 @@ const path = require('path')
 
 // Load configuration
 require('dotenv').config()
+process.env.TZ = "America/Chicago";
 
 // This is now the main entry point
 async function run () {
