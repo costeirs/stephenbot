@@ -11,7 +11,8 @@ module.exports = class Sparkle {
         ['｡･:*:･ﾟ★,｡･:*:･ﾟ☆ ', ' ｡･:*:･ﾟ★,｡･:*:･ﾟ☆'],
         ['☆♬○♩●♪✧♩ ', ' ♩✧♪●♩○♬☆'],
         ['*＊✿❀ ', ' ❀✿＊*'],
-        ['(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ ', '']
+        ['(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ ', ''],
+        ['(☞ﾟ∀ﾟ)☞', '']
     ]
     let sparkle = sparkles[Math.floor(Math.random() * sparkles.length)]
     let sentence = message.command.replace(this.WatchPhrase, '').trim()

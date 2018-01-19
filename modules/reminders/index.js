@@ -10,33 +10,29 @@ module.exports = class Reminders {
   }
 
   // Tick will run every 10 seconds
-  tick (bot) {
+  async tick (bot) {
     var currentDate = new Date()
     currentDate.setSeconds(0)
     currentDate.setMilliseconds(0)
 
-    Model.find({date: currentDate, seen: false}).exec((err, results) => {
-      if (err) {
-        return console.error('error is', err)
-      }
+    const results = await Model.find({date: currentDate, seen: false}).exec()
 
-      results.forEach(reminder => {
-        console.log('sending notification', reminder._id)
-        const channel = bot.channels.get(reminder.channel)
-        if (!channel) {
-          // @FIXME bug? dm channels do not reopen. ignore for now
-          console.error("can't find channel", reminder.channel)
+    results.forEach(reminder => {
+      console.log('sending notification', reminder._id)
+      const channel = bot.channels.get(reminder.channel)
+      if (!channel) {
+        // @FIXME bug? dm channels do not reopen. ignore for now
+        console.error("can't find channel", reminder.channel)
 
-          reminder.seen = true
-          reminder.save()
-          return
-        }
-        channel.send('**REMINDER**\n' + reminder.title + '\n@everyone')
-
-        // mark as seen
         reminder.seen = true
         reminder.save()
-      })
+        return
+      }
+      channel.send('**REMINDER**\n' + reminder.title + '\n@everyone')
+
+        // mark as seen
+      reminder.seen = true
+      reminder.save()
     })
   }
 
@@ -68,6 +64,11 @@ module.exports = class Reminders {
 
     if (!realdate) {
       message.reply("sorry, I couldn't understand the date")
+      return
+    }
+
+    if (realdate < new Date()) {
+      message.reply("oops, you can't set a reminder in the past")
       return
     }
 
@@ -113,11 +114,11 @@ module.exports = class Reminders {
   /**
   * create new reminder
   */
-  _create (message, data) {
+  async _create (message, data) {
     // save to database
     const reminder = new Model({'title': data.title, 'date': data.date, 'channel': message.channel.id})
 
-    reminder.save()
+    await reminder.save()
 
     message.reply('Reminder made for **' + data.title + '** on this channel for **' + data.date + '**')
   }

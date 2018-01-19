@@ -30,7 +30,20 @@ async function run () {
 
   // 3. Load modules
   const modules = dirs('modules')
+  let modulesEnabled = []
+  if (process.env.MODULES_ENABLED) {
+    modulesEnabled = process.env.MODULES_ENABLED.split(' ')
+  } else {
+    modulesEnabled = modules
+  }
+  if (modulesEnabled.length === 0) {
+    throw new Error('You need at least one module enabled.')
+  }
   for (var module of modules) {
+    if (!(modulesEnabled.includes(module))) {
+      console.log('Skipping module', module)
+      continue
+    }
     console.log('Loading module', module)
     Bot.modules.push(new (require('./modules/' + module))())
   }

@@ -8,11 +8,12 @@ module.exports = class Bot extends Client {
 
   onready () {
     console.log("I'm ready!")
+    this.user.setPresence({ game: { name: 'Node.js ' + process.version, type: 0 } })
   }
 
   onmessage (message) {
-    // make sure we don't reply to our own messages
-    if (message.author.id === this.user.id) {
+    // make sure we don't reply to our own messages (or other bots)
+    if (message.author.bot || message.author.id === this.user.id) {
       return
     }
 
@@ -50,12 +51,12 @@ module.exports = class Bot extends Client {
         // put command into message object
         message.command = command
         // fire
-        try {
-          m.fire(message)
-        } catch (e) {
-          console.error('error firing module', m.constructor.name, ':', e)
-          message.reply('oops, something went wrong.')
-        }
+        Promise.resolve(m.fire(message))
+          .catch(e => {
+            // catch failed promise (or exception from method thanks to #resolve)
+            console.error('error firing module', m.constructor.name, ':', e)
+            message.reply('oops, something went wrong.')
+          })
         // only one handler per phrase right now
         return
       }
