@@ -15,7 +15,7 @@ module.exports = class RSS {
   }
 
   // When the WatchPhrase was heard, fire() is fired
-  fire (message) {
+  async fire (message) {
     console.log('rss firing')
     // see if we were asked for help, list, etc
     message.args = message.command.replace(this.WatchPhrase, '').trim().split(' ')
@@ -77,6 +77,8 @@ module.exports = class RSS {
         feed.save()
       }).catch((error) => {
         console.error('error pulling feed: ', error)
+        feed.lastStatus = 500 // @FIXME
+        feed.save()
       })
     })
   }
@@ -168,7 +170,11 @@ module.exports = class RSS {
     }
 
     let messages = feeds.map(feed => {
-      return '**' + feed.title + '**\n' + feed.url
+      let message = '**' + feed.title + '**\n' + feed.url
+      if (feed.lastStatus >= 400) {
+        message += '  Last fetch returned error.'
+      }
+      return message
     })
 
     messages = '\n' + messages.join('\n')
