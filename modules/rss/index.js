@@ -56,6 +56,10 @@ module.exports = class RSS {
     feeds.forEach(feed => {
       // get
       FeedParser.parse({uri: feed.url}).then((items) => {
+        if (items.length === 0) {
+          console.log('rss feed', feed.url, 'items.length is 0')
+          return
+        }
         // notify
         const meta = items[0].meta
         if (meta.date.getTime() <= feed.lastFeedUpdateAt.getTime()) {
@@ -86,8 +90,8 @@ module.exports = class RSS {
   /**
   * help
   */
-  _help (message) {
-    message.reply('syntax: rss list/(add/remove __url__)')
+  async _help (message) {
+    return message.reply('syntax: rss list/(add/remove __url__)')
   }
 
   /**
@@ -100,8 +104,7 @@ module.exports = class RSS {
 
     // check that we were given a URL
     if (!URL.isWebUri(url)) {
-      message.reply('Not a valid URL')
-      return
+      return message.reply('Not a valid URL')
     }
 
     const feed = await Model.find({'url': url}).exec()
@@ -124,14 +127,14 @@ module.exports = class RSS {
       })
     } else if (feed[0].channels.includes(channelid)) {
       // make sure we don't double track
-      message.reply('This channel is already following that feed.')
+      return message.reply('This channel is already following that feed.')
     } else {
       // already being tracked, so append channel
       await Model.update(
         { _id: feed[0]._id },
         { $push: { channels: channelid } }
       )
-      message.reply('Now following ' + feed[0].title)
+      return message.reply('Now following ' + feed[0].title)
     }
   }
 
@@ -145,11 +148,10 @@ module.exports = class RSS {
 
     // see if url is already tracked
     if (feed.length === 0) {
-      message.reply("This channel isn't following that feed.")
-      return
+      return message.reply("This channel isn't following that feed.")
     }
     // remove channel from feed
-    await Model.update(
+    return Model.update(
       { _id: feed[0]._id },
       { $pull: { channels: channelid } }
     )
@@ -179,6 +181,6 @@ module.exports = class RSS {
 
     messages = '\n' + messages.join('\n')
 
-    message.reply(messages)
+    return message.reply(messages)
   }
 }

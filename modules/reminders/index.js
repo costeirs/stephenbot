@@ -25,19 +25,18 @@ module.exports = class Reminders {
         console.error("can't find channel", reminder.channel)
 
         reminder.seen = true
-        reminder.save()
-        return
+        return reminder.save()
       }
       channel.send('**REMINDER**\n' + reminder.title + '\n@everyone')
 
         // mark as seen
       reminder.seen = true
-      reminder.save()
+      return reminder.save()
     })
   }
 
   // When the WatchPhrase was heard, fire() is fired
-  fire (message) {
+  async fire (message) {
     console.log('firing reminders')
     // see if we were asked for help, list, etc
     var arg = message.command.replace(this.WatchPhrase, '').trim()
@@ -63,13 +62,11 @@ module.exports = class Reminders {
     }
 
     if (!realdate) {
-      message.reply("sorry, I couldn't understand the date")
-      return
+      return message.reply("sorry, I couldn't understand the date")
     }
 
     if (realdate < new Date()) {
-      message.reply("oops, you can't set a reminder in the past")
-      return
+      return message.reply("oops, you can't set a reminder in the past")
     }
 
     realdate.setSeconds(0)
@@ -87,8 +84,8 @@ module.exports = class Reminders {
   /**
   * help
   */
-  _help (message) {
-    message.reply('syntax: remind __what__ __when__')
+  async _help (message) {
+    return message.reply('syntax: remind __what__ __when__')
   }
 
   /**
@@ -100,15 +97,14 @@ module.exports = class Reminders {
     const reminders = await Model.find({'channel': channel, 'date': {$gt: new Date()}, 'seen': false}).exec()
 
     if (reminders.length === 0) {
-      message.reply('No upcoming reminders for this channel.')
-      return
+      return message.reply('No upcoming reminders for this channel.')
     }
 
     var list = 'Reminders currently set for this channel:\n'
     reminders.forEach(reminder => {
       list += reminder.date + ': ' + reminder.title + '\n'
     })
-    message.reply(list)
+    return message.reply(list)
   }
 
   /**
@@ -120,6 +116,6 @@ module.exports = class Reminders {
 
     await reminder.save()
 
-    message.reply('Reminder made for **' + data.title + '** on this channel for **' + data.date + '**')
+    return message.reply('Reminder made for **' + data.title + '** on this channel for **' + data.date + '**')
   }
 }

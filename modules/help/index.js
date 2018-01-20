@@ -4,8 +4,8 @@ module.exports = class Help {
     return /^help$/i
   }
 
-  fire (message) {
+  async fire (message) {
     var str = 'Available commands: ' + message.client.modules.map(m => m.constructor.name).join(', ')
-    message.reply(str)
+    return message.reply(str)
   }
 }

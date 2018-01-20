@@ -4,7 +4,7 @@ module.exports = class Sparkle {
     return /^sparkle\b/i
   }
 
-  fire (message) {
+  async fire (message) {
     console.log('sparkling')
     const sparkles = [
         ['✧･ﾟ: *✧･ﾟ:* ', ' *:･ﾟ✧*:･ﾟ✧'],
@@ -18,6 +18,6 @@ module.exports = class Sparkle {
     let sentence = message.command.replace(this.WatchPhrase, '').trim()
     let response = sparkle[0] + sentence + sparkle[1]
 
-    message.reply(response)
+    return message.reply(response)
   }
 }

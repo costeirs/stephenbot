@@ -72,7 +72,11 @@ module.exports = class Bot extends Client {
       if (typeof m.tick !== 'function') {
         continue
       }
-      m.tick(this)
+      Promise.resolve(m.tick(this))
+        .catch(e => {
+          // catch failed promise (or exception from method thanks to #resolve)
+          console.error('error ticking module', m.constructor.name, ':', e)
+        })
     }
   }
 }

@@ -6,7 +6,7 @@ const path = require('path')
 
 // Load configuration
 require('dotenv').config()
-process.env.TZ = "America/Chicago";
+process.env.TZ = 'America/Chicago'
 
 // This is now the main entry point
 async function run () {
@@ -59,7 +59,7 @@ async function run () {
   // Handle stopping properly
   process.on('SIGINT', function () {
     console.log('graceful shutdown')
-    Bot.disconnect()
+    Bot.destroy()
     process.exit()
   })
 }

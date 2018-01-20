@@ -4,7 +4,7 @@ module.exports = class Ping {
     return /^ping$/i
   }
 
-  fire (message) {
-    message.reply('pong')
+  async fire (message) {
+    return message.reply('pong')
   }
 }
