@@ -39,13 +39,17 @@ module.exports = class Reminders {
   async fire (message) {
     console.log('firing reminders')
     // see if we were asked for help, list, etc
-    let arg = message.command.replace(this.WatchPhrase, '').trim()
-    console.log('arg=', arg)
-    if (arg === '' || arg === 'help') {
+    let args = message.command.replace(this.WatchPhrase, '').trim()
+    let argfirst = args.split(' ')[0]
+    console.log('args=', args, 'arg1=', argfirst)
+    if (args === '' || args === 'help') {
       return this._help(message)
     }
-    if (arg === 'list') {
+    if (args === 'list') {
       return this._list(message)
+    }
+    if (argfirst === 'delete' || argfirst === 'rm') {
+      return this._delete(message)
     }
 
     let realdate
@@ -56,6 +60,7 @@ module.exports = class Reminders {
       realdatephrase = response.phrase
       console.log('real=', realdate, 'phrase=', realdatephrase)
     } catch (e) {
+      console.log('error parsing datetime', e)
       return message.reply(e.message)
     }
 
@@ -117,7 +122,7 @@ module.exports = class Reminders {
       }
     }
 
-    if (!realdate.raw) {
+    if (!realdate || !realdate.raw) {
       throw new Error("sorry, I couldn't understand the date")
     }
 
@@ -158,7 +163,7 @@ module.exports = class Reminders {
   * help
   */
   async _help (message) {
-    return message.reply('syntax: remind __what__ __when__')
+    return message.reply('syntax: remind __what__ __when__\nremind list\nremind delete __part of title__')
   }
 
   /**
@@ -190,5 +195,25 @@ module.exports = class Reminders {
     await reminder.save()
 
     return message.reply('Reminder made for **' + data.title + '** on this channel for **' + data.date + '**')
+  }
+
+  async _delete (message) {
+    let phrase = message.command.replace(this.WatchPhrase, '').trim().split(' ').slice(1).join(' ')
+
+    const results = await Model.remove(
+      {
+        'channel': message.channel.id,
+        'title': { '$regex': phrase },
+        'seen': false
+      }
+    ).exec()
+
+    console.log('removed=', results.result)
+
+    if (results.result.n === 0) {
+      return message.reply('No reminders found about "' + phrase + '".')
+    }
+
+    return message.reply('Deleted ' + results.result.n + ' reminders.')
   }
 }

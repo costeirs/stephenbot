@@ -5,7 +5,7 @@ module.exports = class Help {
   }
 
   async fire (message) {
-    var str = 'Available commands: ' + message.client.modules.map(m => m.constructor.name).join(', ')
+    var str = 'Available modules: ' + message.client.modules.map(m => m.constructor.name).join(', ')
     return message.reply(str)
   }
 }
