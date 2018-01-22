@@ -60,7 +60,7 @@ module.exports = class RSS {
           throw new Error('rss feed ' + feed.url + ' items.length is 0')
         }
         // notify
-        const meta = items[0].meta
+        const meta = items[0]
         if (!meta.date) {
           throw new Error('rss feed ' + feed.url + ' has no date field')
         }
