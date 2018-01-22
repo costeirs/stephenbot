@@ -16,6 +16,13 @@ const definition = {
   },
   lastFeedUpdateAt: {
     type: Date
+  },
+  interval: {
+    type: Number,
+    defaults: 10
+  },
+  nextFeedUpdateAt: {
+    type: Number
   }
 }
 

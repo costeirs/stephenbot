@@ -57,11 +57,13 @@ module.exports = class RSS {
       // get
       FeedParser.parse({uri: feed.url}).then((items) => {
         if (items.length === 0) {
-          console.log('rss feed', feed.url, 'items.length is 0')
-          return
+          throw new Error('rss feed ' + feed.url + ' items.length is 0')
         }
         // notify
         const meta = items[0].meta
+        if (!meta.date) {
+          throw new Error('rss feed ' + feed.url + ' has no date field')
+        }
         if (meta.date.getTime() <= feed.lastFeedUpdateAt.getTime()) {
           return
         }
@@ -114,9 +116,12 @@ module.exports = class RSS {
       // new feed to track
       FeedParser.parse({uri: url}).then((items) => {
         if (items.length === 0) {
-          throw new Error('Feed contains no items')
+          throw new Error('rss feed ' + url + ' contains no items')
         }
         const meta = items[0].meta
+        if (!meta.date) {
+          throw new Error('rss feed ' + url + ' has no date field')
+        }
         const feed = new Model({'title': meta.title, 'channels': [channelid], 'url': url, 'lastFeedUpdateAt': meta.date})
         feed.save()
 
@@ -129,7 +134,7 @@ module.exports = class RSS {
       // make sure we don't double track
       return message.reply('This channel is already following that feed.')
     } else {
-      // already being tracked, so append channel
+      // already being tracked by a different channel, so add this channel
       await Model.update(
         { _id: feed[0]._id },
         { $push: { channels: channelid } }

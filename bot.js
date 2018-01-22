@@ -57,6 +57,14 @@ module.exports = class Bot extends Client {
             console.error('error firing module', m.constructor.name, ':', e)
             message.reply('oops, something went wrong.')
           })
+          .then(() => {
+            if (message.channel.type !== 'dm' && process.env.QUIET && process.env.QUIET === 'true') {
+              message.delete()
+            }
+          })
+          .catch(e => {
+            console.error("quiet's turned on but I can't actually delete messages", e)
+          })
         // only one handler per phrase right now
         return
       }

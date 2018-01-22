@@ -39,7 +39,7 @@ module.exports = class Reminders {
   async fire (message) {
     console.log('firing reminders')
     // see if we were asked for help, list, etc
-    var arg = message.command.replace(this.WatchPhrase, '').trim()
+    let arg = message.command.replace(this.WatchPhrase, '').trim()
     console.log('arg=', arg)
     if (arg === '' || arg === 'help') {
       return this._help(message)
@@ -48,37 +48,110 @@ module.exports = class Reminders {
       return this._list(message)
     }
 
-    // cut off words from the beginning until we get something date looking
-    var parts = message.command.split(' ')
-    var realdate
-    var realdatephrase
-    for (var i = 0; i < parts.length; i++) {
-      realdatephrase = parts.slice(i).join(' ')
-      var testdate = Sugar.Date(realdatephrase, { future: 'true' })
-      if (testdate.isValid().raw) {
-        realdate = testdate.raw
-        break
-      }
+    let realdate
+    let realdatephrase
+    try {
+      let response = Reminders.parseDatetime(message.command)
+      realdate = response.date
+      realdatephrase = response.phrase
+      console.log('real=', realdate, 'phrase=', realdatephrase)
+    } catch (e) {
+      return message.reply(e.message)
     }
 
-    if (!realdate) {
-      return message.reply("sorry, I couldn't understand the date")
-    }
+    // prepare for regex
+    realdatephrase = realdatephrase.replace('/', '\\/')
 
-    if (realdate < new Date()) {
-      return message.reply("oops, you can't set a reminder in the past")
-    }
-
-    realdate.setSeconds(0)
-    realdate.setMilliseconds(0)
-
-    var regexphrase = '^remind(?:ers?| me| us)?(?: (?:to|about)?)? (.+?) (?:on |at )?' + realdatephrase + '$'
-    var title = message.command.match(new RegExp(regexphrase, 'i'))[1]
+    let regexphrase = '^remind(?:ers?| me| us)?(?: (?:to|about)?)? (.+?) (?:on |at )?' + realdatephrase + '$'
+    let title = message.command.match(new RegExp(regexphrase, 'i'))[1]
 
     // pass data...
     const data = {'title': title, 'date': realdate}
 
     return this._create(message, data)
+  }
+
+  /**
+  * Parse User supplied sentence for date and/or time.
+  * Bumps input without time to noon.
+  * @returns Date
+  */
+  static parseDatetime (value) {
+    // cut off words from the beginning until we get something date looking
+
+    // @BUG due to Sugar parsing bug, swap 'at noon' for 'at 12:00 pm'
+    value = value.replace(/noon$/, '12:00 pm')
+    let parts = value.split(' ')
+    let realdate
+    let realdatephrase
+    // Sugar returns in params how specific the datetime was given.
+    let realdateparams = {}
+
+    for (let i = 0; i < parts.length; i++) {
+      realdatephrase = parts.slice(i).join(' ')
+      let testdate = Sugar.Date(realdatephrase, { params: realdateparams })
+      if (testdate.isValid().raw) {
+        realdate = testdate
+        break
+      }
+    }
+
+    // shortcut
+    if (realdatephrase === '12:00 pm') {
+      // test again with future:true for "noon" to become the next noon
+      realdatephrase = realdatephrase.replace(/12:00 pm$/, 'noon')
+      let testdate = Sugar.Date(realdatephrase, { future: true, params: realdateparams })
+      if (testdate.isValid().raw) {
+        realdate = testdate
+      }
+    } else if (realdatephrase === parts.join(' ') && parts.length !== 1) {
+      // somtimes, Sugar is able to figure out the date immediately when only a date is present
+      //  ("we have a meeting on 1/30/2018"), so do an additional check.
+      // we ended up with what we started with; try parsing just last part.
+      realdatephrase = parts[parts.length - 1]
+      let testdate = Sugar.Date(realdatephrase, { params: realdateparams })
+      if (testdate.isValid().raw) {
+        realdate = testdate
+      } else {
+
+      }
+    }
+
+    if (!realdate.raw) {
+      throw new Error("sorry, I couldn't understand the date")
+    }
+
+    if (realdate.raw < new Date()) {
+      throw new Error("oops, you can't set a reminder in the past")
+    }
+
+    /*
+    Use specificity from Sugar to adjust time.
+    By default, "tomorrow" will become "1/1/2018 12:00:00 AM".
+    Since users will /probably/ not appreciate an @everyone at midnight,
+     we will detect vague datetimes and adjust them to something tolerable.
+    */
+    // console.log("realdatephrase", realdatephrase)
+    // console.log("parms", realdateparams)
+    // console.log("specificity=",realdateparams.specificity)
+    // console.log("realdate", realdate)
+    // 0. Only month/day
+    if ('month' in realdateparams && realdateparams.date && !realdateparams.hour) {
+      // console.log("m/d but no hour")
+      realdate.set({hour: 12, minute: 0})
+    }
+    // 1. If unit is available, then "tomorrow" or "in two days" etc
+    if (realdateparams.unit && realdateparams.specificity >= 4 && !realdateparams.hour) {
+      // console.log("unit but no hour")
+      realdate.set({hour: 12, minute: 0})
+    }
+
+    realdatephrase = realdatephrase.replace(/12:00 pm$/, 'noon')
+
+    // adjust seconds and ms for simpler cron
+    realdate.set({seconds: 0, milliseconds: 0})
+
+    return {date: realdate.raw, phrase: realdatephrase}
   }
 
   /**
