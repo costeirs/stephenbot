@@ -13,6 +13,9 @@ const definition = {
   seen: {
     type: Boolean,
     default: false
+  },
+  every: {
+    type: String
   }
 }
 

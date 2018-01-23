@@ -31,6 +31,21 @@ module.exports = class Reminders {
 
         // mark as seen
       reminder.seen = true
+
+      // repeat?
+      if (reminder.every) {
+        let nextDate
+        try {
+          nextDate = Reminders.parseDatetime('next ' + reminder.every)
+        } catch (e) {
+          console.log('failed to repeat', e)
+          return
+        }
+
+        reminder.date = nextDate.date
+        reminder.seen = false
+      }
+
       return reminder.save()
     })
   }
@@ -52,13 +67,13 @@ module.exports = class Reminders {
       return this._delete(message)
     }
 
-    let realdate
-    let realdatephrase
+    let realdate, realdatephrase, realdaterepeat
     try {
       let response = Reminders.parseDatetime(message.command)
       realdate = response.date
       realdatephrase = response.phrase
-      console.log('real=', realdate, 'phrase=', realdatephrase)
+      realdaterepeat = response.every
+      console.log('real=', realdate, 'phrase=', realdatephrase, 'every=', realdaterepeat)
     } catch (e) {
       console.log('error parsing datetime', e)
       return message.reply(e.message)
@@ -67,11 +82,11 @@ module.exports = class Reminders {
     // prepare for regex
     realdatephrase = realdatephrase.replace('/', '\\/')
 
-    let regexphrase = '^remind(?:ers?| me| us)?(?: (?:to|about)?)? (.+?) (?:on |at )?' + realdatephrase + '$'
+    let regexphrase = '^remind(?:ers?| me| us)?(?: (?:to|about)?)? (.+?) (?:on |at |every )?' + realdatephrase + '$'
     let title = message.command.match(new RegExp(regexphrase, 'i'))[1]
 
     // pass data...
-    const data = {'title': title, 'date': realdate}
+    const data = {'title': title, 'date': realdate, 'every': realdaterepeat}
 
     return this._create(message, data)
   }
@@ -79,19 +94,43 @@ module.exports = class Reminders {
   /**
   * Parse User supplied sentence for date and/or time.
   * Bumps input without time to noon.
-  * @returns Date
+  * @returns {date: Date, phrase: String, every: String}
   */
   static parseDatetime (value) {
-    // cut off words from the beginning until we get something date looking
-
     // @BUG due to Sugar parsing bug, swap 'at noon' for 'at 12:00 pm'
+    const origvalue = value
     value = value.replace(/noon$/, '12:00 pm')
     let parts = value.split(' ')
     let realdate
     let realdatephrase
-    // Sugar returns in params how specific the datetime was given.
-    let realdateparams = {}
+    let realdateparams = {} // Sugar returns in params how specific the datetime was given.
 
+    // support for repeating reminders
+    let reptregex = /every ((?:mon|tues|wednes|thurs|fri|sat|sun)?day)( at (.+?))?$/
+    let reptresult = value.match(reptregex)
+    if (reptresult) {
+        //
+      realdatephrase = reptresult[0].replace(/12:00 pm$/, 'noon')
+
+      let innerphrase = (reptresult[1] + (reptresult[2] || ''))
+      if (origvalue.endsWith('12:00 pm')) {
+        realdatephrase = realdatephrase.replace(/noon$/, '12:00 pm')
+      } else {
+        innerphrase = innerphrase.replace(/12:00 pm$/, 'noon')
+      }
+
+        // assume for now future always OK and not affected by bug
+      realdate = Sugar.Date(innerphrase, { future: true, params: realdateparams })
+      realdate.set({seconds: 0, milliseconds: 0})
+
+      if (!reptresult[2]) {
+        realdate.set({hours: 12})
+      }
+
+      return {date: realdate.raw, phrase: realdatephrase, every: innerphrase}
+    }
+
+    // cut off words from the beginning until we get something date looking
     for (let i = 0; i < parts.length; i++) {
       realdatephrase = parts.slice(i).join(' ')
       let testdate = Sugar.Date(realdatephrase, { params: realdateparams })
@@ -190,11 +229,19 @@ module.exports = class Reminders {
   */
   async _create (message, data) {
     // save to database
-    const reminder = new Model({'title': data.title, 'date': data.date, 'channel': message.channel.id})
+    const reminder = new Model({'title': data.title, 'date': data.date, 'channel': message.channel.id, 'every': data.every})
 
     await reminder.save()
 
-    return message.reply('Reminder made for **' + data.title + '** on this channel for **' + data.date + '**')
+    let response = 'Reminder made for **' + data.title + '** on this channel for '
+
+    if (!data.every) {
+      response += '**' + data.date + '**'
+    } else {
+      response += '**every ' + data.every + '**'
+    }
+
+    return message.reply(response)
   }
 
   async _delete (message) {

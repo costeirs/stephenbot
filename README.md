@@ -4,10 +4,12 @@ Automated Nonsense
 ## The Bot
 Extends [discord.js](https://discord.js.org/).
 
-## Testing
-Fill in .env file.
+## Running Locally
+Fill in .env file and `npm start`
 
 ## Contributing
+Run `npm run test` to make sure tests pass.
+
 Run `npm run lint` before committing.
 
 ## Modules
@@ -20,7 +22,7 @@ module.exports = class Ping {
   * Define instance variables in the constructor
   */
   constructor () {
-    this._anInstanceVariable = true
+    this._anInstanceVariable = "example"
   }
 
   /**
