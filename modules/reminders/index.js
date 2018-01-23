@@ -54,8 +54,8 @@ module.exports = class Reminders {
   async fire (message) {
     console.log('firing reminders')
     // see if we were asked for help, list, etc
-    let args = message.command.replace(this.WatchPhrase, '').trim()
-    let argfirst = args.split(' ')[0]
+    let args = message.args.join(' ')
+    let argfirst = message.args[0]
     console.log('args=', args, 'arg1=', argfirst)
     if (args === '' || args === 'help') {
       return this._help(message)
@@ -109,7 +109,7 @@ module.exports = class Reminders {
     let reptregex = /every ((?:mon|tues|wednes|thurs|fri|sat|sun)?day)( at (.+?))?$/
     let reptresult = value.match(reptregex)
     if (reptresult) {
-        //
+      //
       realdatephrase = reptresult[0].replace(/12:00 pm$/, 'noon')
 
       let innerphrase = (reptresult[1] + (reptresult[2] || ''))
@@ -119,7 +119,7 @@ module.exports = class Reminders {
         innerphrase = innerphrase.replace(/12:00 pm$/, 'noon')
       }
 
-        // assume for now future always OK and not affected by bug
+      // assume for now future always OK and not affected by bug
       realdate = Sugar.Date(innerphrase, { future: true, params: realdateparams })
       realdate.set({seconds: 0, milliseconds: 0})
 
@@ -233,10 +233,10 @@ module.exports = class Reminders {
 
     await reminder.save()
 
-    let response = 'Reminder made for **' + data.title + '** on this channel for '
+    let response = 'Reminder made for **' + data.title + '** on this channel '
 
     if (!data.every) {
-      response += '**' + data.date + '**'
+      response += 'for **' + data.date + '**'
     } else {
       response += '**every ' + data.every + '**'
     }
@@ -245,7 +245,7 @@ module.exports = class Reminders {
   }
 
   async _delete (message) {
-    let phrase = message.command.replace(this.WatchPhrase, '').trim().split(' ').slice(1).join(' ')
+    let phrase = message.args.slice(1).join(' ')
 
     const results = await Model.remove(
       {

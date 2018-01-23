@@ -37,6 +37,7 @@ module.exports = class Bot extends Client {
     }
 
     // make sure it's not empty
+    command = command.trim()
     if (!command) {
       console.log('empty')
       return
@@ -50,6 +51,7 @@ module.exports = class Bot extends Client {
       if (m.WatchPhrase.test(command)) {
         // put command into message object
         message.command = command
+        message.args = command.replace(m.WatchPhrase, '').trim().split(' ')
         // fire
         Promise.resolve(m.fire(message))
           .catch(e => {

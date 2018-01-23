@@ -18,7 +18,6 @@ module.exports = class RSS {
   async fire (message) {
     console.log('rss firing')
     // see if we were asked for help, list, etc
-    message.args = message.command.replace(this.WatchPhrase, '').trim().split(' ')
     const action = message.args[0] || ''
     console.log('action=', action)
     if (action === 'list') {
@@ -156,10 +155,12 @@ module.exports = class RSS {
       return message.reply("This channel isn't following that feed.")
     }
     // remove channel from feed
-    return Model.update(
+    await Model.update(
       { _id: feed[0]._id },
       { $pull: { channels: channelid } }
     )
+
+    return message.reply('Stopped following ' + feed[0].title)
   }
 
   async _list (message) {
